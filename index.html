@@ -1,272 +1,396 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>EWS – Eisenbahnwerkstatt für die Schiene</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Railsystems RP</title>
 
-<style>
-/* iPhone/Browser-Basics */
-*{ box-sizing:border-box; }
-html, body{ width:100%; }
-body{
-  margin:0;
-  font-family: Arial, Helvetica, sans-serif;
-  background:#ffffff;
-  scroll-behavior:smooth;
-  color:#111;
-  overflow-x:hidden;                 /* verhindert iPhone “abgeschnitten” durch Overflow */
-  -webkit-text-size-adjust:100%;
-}
+  <style>
+    :root{
+      /* Railsystems-RP Look (teal / dunkel-teal) */
+      --teal-1:#3BA8BE;      /* helles Teal (Header-Leiste im Menü) */
+      --teal-2:#214B56;      /* dunkel-teal (Menü-Hintergrund) */
+      --teal-3:#1B3F48;      /* noch dunkler (Trenner) */
+      --text:#0d0f10;
+      --bg:#ffffff;
+    }
 
-/* ✅ Blau-Ton näher am Foto (Lok-Blau) */
-:root{
-  --ews-blue: #2F6FA3;               /* Hauptblau */
-  --ews-blue-dark: #23577F;          /* dunkler */
-  --ews-slate:#2f3b43;
-  --bg:#ffffff;
-  --soft:#f3f6f8;
-}
+    *{ box-sizing:border-box; }
+    html,body{ width:100%; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+      -webkit-text-size-adjust:100%;
+    }
 
-/* Sticky Header + Safe Area */
-header{
-  background: var(--ews-blue);
-  color:white;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+    /* TOP BAR */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:1000;
+      background: var(--teal-2);
+      color:#fff;
+      height: 56px;
+      display:flex;
+      align-items:center;
+      gap:14px;
 
-  /* Safe-area + mobile friendly padding */
-  padding-top: calc(12px + env(safe-area-inset-top));
-  padding-bottom: 12px;
-  padding-left: calc(16px + env(safe-area-inset-left));
-  padding-right: calc(16px + env(safe-area-inset-right));
+      padding-left: calc(14px + env(safe-area-inset-left));
+      padding-right: calc(14px + env(safe-area-inset-right));
+      padding-top: env(safe-area-inset-top);
+      box-shadow: 0 8px 18px rgba(0,0,0,.18);
+    }
 
-  position: sticky;
-  top:0;
-  z-index:1000;
-  box-shadow: 0 8px 18px rgba(0,0,0,.12);
-}
+    .hamburger{
+      width:44px;
+      height:44px;
+      border:0;
+      background:transparent;
+      color:#fff;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      border-radius:10px;
+    }
+    .hamburger:hover{ background: rgba(255,255,255,.08); }
 
-/* Logo */
-.logo{
-  font-size: 26px;
-  font-weight: bold;
-  background: white;
-  color: var(--ews-blue-dark);
-  padding: 6px 14px;
-  border-radius: 6px;
-  letter-spacing:.5px;
-  flex: 0 0 auto;
-}
+    .brand{
+      font-weight:800;
+      letter-spacing:.6px;
+      font-size:16px;
+      user-select:none;
+    }
+    .brand small{
+      opacity:.9;
+      font-weight:600;
+      letter-spacing:.3px;
+    }
 
-/* Navigation */
-nav{
-  display:flex;
-  flex-wrap:wrap;        /* ✅ bricht auf iPhone sauber um */
-  gap: 10px 14px;
-  justify-content:flex-end;
-}
-nav a{
-  color:white;
-  text-decoration:none;
-  font-weight:bold;
-  opacity:.95;
-  white-space:nowrap;
-}
-nav a:hover{opacity:1; text-decoration:underline;}
+    /* DRAWER + OVERLAY */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.45);
+      opacity:0;
+      pointer-events:none;
+      transition: .18s opacity;
+      z-index:1100;
+    }
+    .overlay.open{
+      opacity:1;
+      pointer-events:auto;
+    }
 
-/* Sections */
-section{
-  /* ✅ responsive padding statt harter 15% (macht iPhone schnell “zu eng”) */
-  padding: 80px clamp(16px, 6vw, 120px);
-}
+    .drawer{
+      position:fixed;
+      top:0;
+      left:0;
+      height:100vh;
+      width:min(420px, 86vw);
+      background: var(--teal-2);
+      color:#fff;
+      transform: translateX(-102%);
+      transition: .22s transform;
+      z-index:1200;
 
-.hero{
-  background: linear-gradient(135deg, var(--soft) 0%, #ffffff 70%);
-  text-align:center;
-  padding: 110px clamp(16px, 6vw, 120px);
-  border-bottom: 1px solid rgba(0,0,0,.06);
-}
+      padding-top: env(safe-area-inset-top);
+      box-shadow: 16px 0 40px rgba(0,0,0,.35);
+      display:flex;
+      flex-direction:column;
+    }
+    .drawer.open{ transform: translateX(0); }
 
-.hero .tag{
-  display:inline-block;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(47,111,163,.14);
-  color: var(--ews-blue-dark);
-  font-weight: 800;
-  margin-bottom: 14px;
-}
+    .drawerHeader{
+      background: var(--teal-1);
+      padding: 18px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      min-height:72px;
+    }
+    .drawerHeader .title{
+      font-weight:900;
+      letter-spacing:.4px;
+      font-size:18px;
+    }
+    .closeBtn{
+      width:42px;
+      height:42px;
+      border:0;
+      background: rgba(255,255,255,.18);
+      color:#fff;
+      cursor:pointer;
+      border-radius:10px;
+      font-size:18px;
+    }
+    .closeBtn:hover{ background: rgba(255,255,255,.26); }
 
-.hero h1{
-  font-size: clamp(34px, 5vw, 56px);
-  margin: 0 0 10px;
-  color: var(--ews-blue-dark);
-}
+    .menu{
+      padding: 6px 0;
+      overflow:auto;
+    }
+    .menu a{
+      display:block;
+      padding: 18px 22px;
+      color:#fff;
+      text-decoration:none;
+      font-weight:700;
+      letter-spacing:.4px;
+      text-transform: uppercase;
+      font-size: 15px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      border-bottom: 1px solid rgba(0,0,0,.18);
+    }
+    .menu a:hover{
+      background: rgba(255,255,255,.06);
+    }
+    .menu a.active{
+      background: rgba(255,255,255,.08);
+      outline: 2px solid rgba(255,255,255,.10);
+      outline-offset: -2px;
+    }
 
-.hero p{
-  font-size: clamp(16px, 2vw, 20px);
-  margin: 0 0 28px;
-  color: #35444c;
-}
+    /* CONTENT */
+    main{
+      padding: 26px clamp(16px, 5vw, 90px);
+      padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    }
 
-/* Buttons */
-.button{
-  background: var(--ews-blue);
-  color:white;
-  padding: 14px 30px;
-  text-decoration:none;
-  border-radius: 10px;
-  font-weight:bold;
-  display:inline-block;
-  border: 2px solid transparent;
-  margin: 6px;
-  transition: .15s transform, .15s filter;
-}
-.button:hover{transform: translateY(-1px); filter:brightness(1.05);}
+    .hero{
+      margin-top: 14px;
+      padding: 22px;
+      border-left: 7px solid var(--teal-1);
+      background: #f4f7f8;
+      border-radius: 14px;
+    }
+    .hero h1{
+      margin:0 0 8px;
+      font-size: clamp(26px, 4vw, 42px);
+      color: #17363f;
+    }
+    .hero p{
+      margin:0;
+      color:#2d3b40;
+      line-height:1.5;
+      font-size: 16px;
+    }
 
-.button.secondary{
-  background: white;
-  color: var(--ews-blue-dark);
-  border-color: var(--ews-blue);
-}
+    section{
+      margin-top: 26px;
+      padding: 22px;
+      border-radius: 14px;
+      background:#ffffff;
+      border: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 10px 26px rgba(0,0,0,.05);
+    }
+    section h2{
+      margin:0 0 12px;
+      color:#17363f;
+      letter-spacing:.3px;
+    }
+    .bullets{
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.65;
+      color:#1f2b2f;
+      font-size: 16px;
+    }
 
-/* Headings */
-h2{
-  color: var(--ews-blue-dark);
-  margin-bottom: 20px;
-}
+    .note{
+      margin-top: 12px;
+      padding: 14px;
+      background:#f4f7f8;
+      border-left: 6px solid var(--teal-2);
+      border-radius: 12px;
+      color:#223035;
+      line-height:1.5;
+    }
 
-/* Cards */
-.card{
-  background: var(--soft);
-  padding: 20px;
-  margin-bottom: 18px;
-  border-left: 6px solid var(--ews-blue);
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,.06);
-}
+    /* optional: kleine “Barrierefreiheit”-floating button wie im screenshot */
+    .accessBtn{
+      position: fixed;
+      right: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 0;
+      cursor: pointer;
+      background: #1679ff;
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+      display:grid;
+      place-items:center;
+      z-index: 900;
+    }
+    .accessBtn:hover{ filter: brightness(1.05); }
 
-/* Rules */
-.rules{
-  background: var(--ews-blue-dark);
-  color:white;
-  padding: 26px;
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.12);
-}
-.rules ul{
-  margin: 12px 0 0;
-  padding-left: 18px;
-  line-height: 1.55;
-}
-
-/* Karriere */
-.jobs{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-.job{
-  background: var(--soft);
-  padding: 18px;
-  border-radius: 12px;
-  border-left: 6px solid var(--ews-blue);
-  box-shadow: 0 8px 20px rgba(0,0,0,.06);
-}
-
-/* Footer + Safe Area bottom */
-footer{
-  background: var(--ews-slate);
-  color:white;
-  text-align:center;
-  padding: 26px calc(16px + env(safe-area-inset-left)) calc(26px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-right));
-}
-
-/* Mobile tweaks */
-@media (max-width: 900px){
-  .jobs{grid-template-columns:1fr;}
-}
-</style>
+    /* small screens */
+    @media (max-width: 520px){
+      main{ padding: 18px 14px; }
+      section, .hero{ padding: 18px; border-radius: 12px; }
+      .menu a{ padding: 18px 18px; font-size: 14px; }
+    }
+  </style>
 </head>
 
 <body>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="hamburger" id="openMenu" aria-label="Menü öffnen" title="Menü">
+      <!-- simple icon -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="white" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+    </button>
 
-<header>
-  <div class="logo">EWS</div>
-  <nav>
-    <a href="#konzern">Konzern</a>
-    <a href="#sicherheit">Sicherheit</a>
-    <a href="#karriere">Karriere</a>
-    <a href="https://loliflo22.github.io/LB-Gebrauchtfahrzeuge/" target="_blank">Miete & Verkauf</a>
-  </nav>
-</header>
+    <div class="brand">
+      Railsystems <small>RP</small>
+    </div>
+  </header>
 
-<section class="hero">
-  <div class="tag">Damit alles am Rollen bleibt</div>
-  <h1>Eisenbahnwerkstatt für die Schiene</h1>
-  <p>Instandhaltung. Revision. Einsatzbereit – auch nach dem Wechsel zur LowlightBahn AG.</p>
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay"></div>
 
-  <a class="button" href="#konzern">Über EWS</a>
-  <a class="button secondary" href="https://loliflo22.github.io/LB-Gebrauchtfahrzeuge/" target="_blank">
-    Miete & Verkauf
-  </a>
-</section>
-
-<section id="konzern">
-  <h2>Über den Konzern EWS</h2>
-
-  <div class="card">
-    2014 mit Hauptsitz in <strong>Society</strong> gegründet.
-  </div>
-
-  <div class="card">
-    EWS ist eine <strong>Eisenbahnwerkstatt</strong>, um Lokomotiven und Wagen instand zu halten.
-  </div>
-
-  <div class="card">
-    Auch lange nach dem Wechsel der LB von <strong>Lowlights Bahn</strong> zu
-    <strong>LowlightBahn AG</strong> sorgt EWS dafür, dass alles weiterhin zuverlässig rollt.
-  </div>
-</section>
-
-<section id="sicherheit">
-  <h2>Sicherheit & Werkstattregeln</h2>
-
-  <div class="rules">
-    <ul>
-      <li><strong>Werkstattgelände betreten für Unbefugte verboten.</strong></li>
-      <li>Betreten nur mit Warn-Chestplate, Hose und Helm.</li>
-      <li>In Minecraft bedeutet das: <strong>Gold-Rüstungsteile tragen.</strong></li>
-    </ul>
-  </div>
-</section>
-
-<section id="karriere">
-  <h2>Karriere bei EWS</h2>
-
-  <div class="jobs">
-    <div class="job">
-      <strong>Werkstatt-Fachmann</strong><br>
-      Allgemeine Instandhaltung und Unterstützung im Werkstattbetrieb.
+  <!-- DRAWER -->
+  <aside class="drawer" id="drawer" aria-label="Seitennavigation">
+    <div class="drawerHeader">
+      <div class="title">Railsystems RP</div>
+      <button class="closeBtn" id="closeMenu" aria-label="Menü schließen">✕</button>
     </div>
 
-    <div class="job">
-      <strong>Eisenbahn-Mechaniker</strong><br>
-      Wartung, Reparatur und Revision von Lokomotiven und Wagen.
+    <nav class="menu" id="menu">
+      <a href="#start" class="active">Start</a>
+      <a href="#lokomotiven">Lokomotiven</a>
+      <a href="#fahrleitung">Fahrleitungsbau-Abnahmefahrzeuge</a>
+      <a href="#verkauf">Verkauf Ersatzteile & Fahrzeuge</a>
+      <a href="#referenzen">Referenzen</a>
+      <a href="#jobs">Stellenanzeigen</a>
+      <a href="#zert">Zertifizierungen</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <main>
+    <div class="hero" id="start">
+      <h1>Railsystems RP</h1>
+      <p>
+        Werkstatt, Instandhaltung und Fahrzeugservice im RP – sauber strukturiert,
+        klare Abläufe, und alles damit’s läuft.
+      </p>
     </div>
 
-    <div class="job">
-      <strong>Rangierer</strong><br>
-      Bewegen und Bereitstellen von Fahrzeugen.
-    </div>
-  </div>
-</section>
+    <section id="lokomotiven">
+      <h2>Lokomotiven</h2>
+      <ul class="bullets">
+        <li>✅ Platzhalter – hier kommen deine Lok-Listen rein</li>
+        <li>z.B. BR218, BR78, V100, usw.</li>
+      </ul>
+      <div class="note">
+        Tipp: Du kannst hier später auch Bilder einbauen (z.B. <code>&lt;img src="bilder/br218.png"&gt;</code>).
+      </div>
+    </section>
 
-<footer>
-  © 2014–2026 EWS · Hauptsitz: Society · „Damit alles am Rollen bleibt“
-</footer>
+    <section id="fahrleitung">
+      <h2>Fahrleitungsbau-Abnahmefahrzeuge</h2>
+      <ul class="bullets">
+        <li>Fahrleitungs-Montagefahrzeuge</li>
+        <li>Fahrleitungs-Instandhaltungstechnik</li>
+        <li>Abnahme / Mess- und Prüffahrten (RP)</li>
+      </ul>
+    </section>
 
+    <section id="verkauf">
+      <h2>Verkauf Ersatzteile & Fahrzeuge</h2>
+      <ul class="bullets">
+        <li>Fahrzeuge & Wagen (nach Absprache)</li>
+        <li>Ersatzteile / Komponenten</li>
+        <li>Abholung in Society (Werkstattgelände)</li>
+      </ul>
+    </section>
+
+    <section id="referenzen">
+      <h2>Referenzen</h2>
+      <ul class="bullets">
+        <li>✅ Platzhalter – hier später Projekte / RP-Aufträge</li>
+        <li>z.B. Revisionen, Umbauten, Rettungseinsätze, etc.</li>
+      </ul>
+    </section>
+
+    <section id="jobs">
+      <h2>Stellenanzeigen</h2>
+      <ul class="bullets">
+        <li>Werkstatt-Fachmann</li>
+        <li>Eisenbahn-Mechaniker</li>
+        <li>Rangierer</li>
+      </ul>
+    </section>
+
+    <section id="zert">
+      <h2>Zertifizierungen</h2>
+      <ul class="bullets">
+        <li>✅ Platzhalter – hier später deine RP-“Zertifikate” / Regeln / Standards</li>
+      </ul>
+    </section>
+
+    <section id="kontakt">
+      <h2>Kontakt</h2>
+      <ul class="bullets">
+        <li>Discord: <strong>@deinName</strong></li>
+        <li>Minecraft: <strong>MC1_16</strong> (oder dein Ingame-Name)</li>
+        <li>Standort Werkstatt: <strong>Society</strong></li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- optional: floating accessibility button -->
+  <button class="accessBtn" aria-label="Barrierefreiheit (Demo)" title="Barrierefreiheit (Demo)">
+    <!-- simple icon -->
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" fill="white"/>
+      <path d="M4 9c5.2 1.8 10.8 1.8 16 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M10 10v10M14 10v10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M10 14h4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <script>
+    const drawer = document.getElementById("drawer");
+    const overlay = document.getElementById("overlay");
+    const openMenu = document.getElementById("openMenu");
+    const closeMenu = document.getElementById("closeMenu");
+    const menu = document.getElementById("menu");
+
+    function openDrawer(){
+      drawer.classList.add("open");
+      overlay.classList.add("open");
+    }
+    function closeDrawer(){
+      drawer.classList.remove("open");
+      overlay.classList.remove("open");
+    }
+
+    openMenu.addEventListener("click", openDrawer);
+    closeMenu.addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
+
+    // Menü-Klick: schließen + active state
+    menu.querySelectorAll("a").forEach(a=>{
+      a.addEventListener("click", ()=>{
+        menu.querySelectorAll("a").forEach(x=>x.classList.remove("active"));
+        a.classList.add("active");
+        closeDrawer();
+      });
+    });
+
+    // ESC schließt
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape") closeDrawer();
+    });
+  </script>
 </body>
 </html>
